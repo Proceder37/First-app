@@ -1,5 +1,12 @@
 class PinsController < ApplicationController
   before_action :set_pin, only: %i[ show edit update destroy ]
+  before_action :authenticate_user!, except: [:index, :show]
+  before_action :correct_user, only: [:edit, :update, :destroy]
+
+  def correct_user
+    @pin = current_user.pins.find_by(id: params[:id])
+    redirect_to pins_path, notice: "Nie jesteś uprawniony do edycji tego pinu!" if @pin.nil?
+  end
 
   # GET /pins or /pins.json
   def index
@@ -12,7 +19,7 @@ class PinsController < ApplicationController
 
   # GET /pins/new
   def new
-    @pin = Pin.new
+    @pin = current_user.pins.build
   end
 
   # GET /pins/1/edit
@@ -21,11 +28,11 @@ class PinsController < ApplicationController
 
   # POST /pins or /pins.json
   def create
-    @pin = Pin.new(pin_params)
+    @pin = current_user.pins.build(pin_params)
 
     respond_to do |format|
       if @pin.save
-        format.html { redirect_to @pin, notice: "Pin was successfully created." }
+        format.html { redirect_to @pin, notice: "Pin utworzony pomyślnie." }
         format.json { render :show, status: :created, location: @pin }
       else
         format.html { render :new, status: :unprocessable_entity }
@@ -38,7 +45,7 @@ class PinsController < ApplicationController
   def update
     respond_to do |format|
       if @pin.update(pin_params)
-        format.html { redirect_to @pin, notice: "Pin was successfully updated." }
+        format.html { redirect_to @pin, notice: "Pin zmodyfikowany pomyślnie." }
         format.json { render :show, status: :ok, location: @pin }
       else
         format.html { render :edit, status: :unprocessable_entity }
@@ -51,7 +58,7 @@ class PinsController < ApplicationController
   def destroy
     @pin.destroy
     respond_to do |format|
-      format.html { redirect_to pins_url, notice: "Pin was successfully destroyed." }
+      format.html { redirect_to pins_url, notice: "Pin usunięty pomyślnie." }
       format.json { head :no_content }
     end
   end
